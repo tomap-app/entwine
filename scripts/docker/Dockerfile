@@ -1,4 +1,4 @@
-FROM pdal/ubuntu:master
+FROM connormanning/pdal
 MAINTAINER Connor Manning <connor@hobu.co>
 
 RUN apt-get update && apt-get install -y \

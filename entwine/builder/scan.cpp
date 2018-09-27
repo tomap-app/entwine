@@ -192,7 +192,9 @@ void Scan::add(FileInfo& f, const std::string localPath)
             }
         });
 
-        if (Executor::get().run(table, localPath, m_re.get()) && np)
+        const Json::Value pipeline(m_in.pipeline(localPath));
+
+        if (Executor::get().run(table, pipeline) && np)
         {
             f.numPoints(np);
             f.bounds(bounds);
@@ -248,10 +250,9 @@ Config Scan::aggregate()
         }
     }
 
-    if (srs.empty())
+    if (srs.empty() && m_in.verbose())
     {
         std::cout << "SRS could not be determined" << std::endl;
-        std::cout << "Setting SRS manually is recommended" << std::endl;
     }
 
     if (!np) throw std::runtime_error("No points found!");

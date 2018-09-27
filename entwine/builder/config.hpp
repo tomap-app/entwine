@@ -51,6 +51,7 @@ public:
         json["tmp"] = arbiter::fs::getTempPath();
         json["trustHeaders"] = true;
         json["threads"] = 8;
+        json["pipeline"].append(Json::objectValue);
 
         return json;
     }
@@ -67,6 +68,28 @@ public:
         json["overflowRatio"] = 0.5;
 
         return json;
+    }
+
+    Json::Value pipeline(std::string filename) const
+    {
+        // TODO Handle reprojection.
+        // TODO Handle user-supplied pipeline.
+
+        /*
+        Json::Value p(m_json["pipeline"]);
+        if (!p.isArray() || p.size() < 1)
+        {
+            throw std::runtime_error("Invalid pipeline: " + p.toStyledString());
+        }
+        */
+
+        Json::Value p;
+        Json::Value reader;
+        reader["filename"] = filename;
+        reader["type"] = "readers.gdal";
+        reader["header"] = "Intensity,Z";
+        p.append(reader);
+        return p;
     }
 
     FileInfoList input() const;
