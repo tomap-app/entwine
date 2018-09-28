@@ -88,6 +88,7 @@ public:
         reader["filename"] = filename;
         reader["type"] = "readers.gdal";
         reader["header"] = "Intensity,Z";
+        reader["memorycopy"] = true;
         p.append(reader);
         return p;
     }

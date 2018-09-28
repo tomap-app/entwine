@@ -109,15 +109,12 @@ public:
 
     std::string getSrsString(std::string input) const;
 
-    Bounds transform(
-            const Bounds& bounds,
-            const Transformation& transformation) const;
-
-    std::vector<std::string> dims(std::string path) const;
+    // std::vector<std::string> dims(std::string path) const;
 
     static std::unique_lock<std::mutex> getLock();
 
 private:
+    UniqueStage createReader(std::string path) const;
     std::unique_ptr<Preview> slowPreview(
             std::string path,
             const Reprojection* reprojection) const;
@@ -131,20 +128,6 @@ private:
     Reprojection srsFoundOrDefault(
             const pdal::SpatialReference& found,
             const Reprojection& given);
-
-    // TODO Remove these.
-    // Returns true if no errors occurred during insertion.
-    bool run(
-            pdal::StreamPointTable& table,
-            std::string path,
-            const Reprojection* reprojection = nullptr,
-            const std::vector<double>* transform = nullptr,
-            std::vector<std::string> preserve = std::vector<std::string>());
-
-    UniqueStage createReader(std::string path) const;
-    UniqueStage createFerryFilter(const std::vector<std::string>& s) const;
-    UniqueStage createReprojectionFilter(const Reprojection& r) const;
-    UniqueStage createTransformationFilter(const std::vector<double>& m) const;
 
     mutable std::mutex m_mutex;
     std::unique_ptr<pdal::StageFactory> m_stageFactory;

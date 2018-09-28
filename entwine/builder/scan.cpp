@@ -171,13 +171,14 @@ void Scan::add(FileInfo& f, const std::string localPath)
         m_scale = Point::min(m_scale, scale);
     }
 
+    // TODO This functionality should be handled in Executor::preview.
     if (!m_in.trustHeaders())
     {
         Bounds bounds(Bounds::expander());
         std::size_t np(0);
 
-        const Schema xyz({ { DimId::X }, { DimId::Y }, { DimId::Z } });
-        VectorPointTable table(xyz, 1024);
+        const Schema xyzSchema({ { DimId::X }, { DimId::Y }, { DimId::Z } });
+        VectorPointTable table(xyzSchema, 1024);
         table.setProcess([&table, &bounds, &np]()
         {
             np += table.size();
@@ -198,6 +199,15 @@ void Scan::add(FileInfo& f, const std::string localPath)
         {
             f.numPoints(np);
             f.bounds(bounds);
+
+            DimList dims;
+            for (const auto& d : xyzSchema.fixedLayout().added())
+            {
+                dims.emplace_back(d.first);
+            }
+
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_schema = m_schema.merge(Schema(dims));
         }
     }
 }
