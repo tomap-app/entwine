@@ -228,6 +228,16 @@ void Builder::insert(
             pr.setField(DimId::PointId, pointId);
             ++pointId;
 
+            if (boundsSubset)
+            {
+                pr.setField(
+                    DimId::X,
+                    pr.getFieldAs<double>(DimId::X) + boundsSubset->min().x);
+                pr.setField(
+                    DimId::Y,
+                    pr.getFieldAs<double>(DimId::Y) + boundsSubset->min().y);
+            }
+
             voxel.initShallow(it.pointRef(), it.data());
             if (so) voxel.clip(*so);
             const Point& point(voxel.point());
@@ -257,14 +267,21 @@ void Builder::insert(
         const auto script = reader.at("script").get<std::string>();
         const auto filename = reader.at("filename").get<std::string>();
 
+        Bounds bounds = metadata.boundsConforming;
+        if (metadata.subset)
+        {
+            bounds.shrink(getBounds(metadata.bounds, *metadata.subset));
+        }
+        bounds.shrink(info.bounds);
+
         const auto fargs =
             filename + "," +
-            std::to_string(static_cast<uint64_t>(info.bounds[0])) + "," +
-            std::to_string(static_cast<uint64_t>(info.bounds[1])) + "," +
-            std::to_string(static_cast<uint64_t>(info.bounds[2])) + "," +
-            std::to_string(static_cast<uint64_t>(info.bounds[3])) + "," +
-            std::to_string(static_cast<uint64_t>(info.bounds[4])) + "," +
-            std::to_string(static_cast<uint64_t>(info.bounds[5]));
+            std::to_string(static_cast<uint64_t>(bounds[0])) + "," +
+            std::to_string(static_cast<uint64_t>(bounds[1])) + "," +
+            std::to_string(static_cast<uint64_t>(bounds[2])) + "," +
+            std::to_string(static_cast<uint64_t>(bounds[3])) + "," +
+            std::to_string(static_cast<uint64_t>(bounds[4])) + "," +
+            std::to_string(static_cast<uint64_t>(bounds[5]));
 
         reader = {
             { "type", "readers.numpy" },

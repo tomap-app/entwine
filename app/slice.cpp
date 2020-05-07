@@ -28,7 +28,7 @@ namespace app
 
 void Slice::addArgs()
 {
-    m_ap.setUsage("entwine build (<options>)");
+    m_ap.setUsage("entwine slice (<options>)");
 
     addInput(
             "File paths or directory entries.  For a recursive directory "
@@ -43,27 +43,6 @@ void Slice::addArgs()
     addConfig();
     addTmp();
     addReprojection();
-
-    m_ap.add(
-        "--strides",
-        "Length of stride for each sliced dimension\n"
-        "Example: --stride [50,50,5], --stride 50 50 5",
-        [this](json j)
-        {
-            if (j.is_string())
-            {
-                m_json["strides"] = json::parse(j.get<std::string>());
-            }
-            else if (j.is_array())
-            {
-                for (json& coord : j)
-                {
-                    coord = std::stod(coord.get<std::string>());
-                }
-                m_json["strides"] = j;
-            }
-        }
-    );
 
     m_ap.add(
             "--threads",
@@ -234,42 +213,20 @@ void Slice::run()
     StringList inputs = resolve(config::getInput(m_json), *endpoints.arbiter);
 
     const auto volume = Bounds(m_json.at("bounds"));
-    const Point strides(m_json.at("strides"));
-    std::vector<Bounds> volumes;
-    for (double x = volume.min().x; x < volume.max().x; x += strides.x)
-    {
-        for (double y = volume.min().y; y < volume.max().y; y += strides.y)
-        {
-            for (double z = volume.min().z; z < volume.max().z; z += strides.z)
-            {
-                volumes.emplace_back(
-                    x,
-                    y,
-                    z,
-                    std::min(x + strides.x, volume.max().x),
-                    std::min(y + strides.y, volume.max().y),
-                    std::min(z + strides.z, volume.max().z)
-                );
-            }
-        }
-    }
 
     SourceList sources;
     for (const auto& filename : inputs)
     {
-        for (const auto& slice : volumes)
-        {
-            Source source(filename);
-            source.info.pipeline = config::getPipeline(m_json);
-            source.info.pipeline.at(0)["filename"] = filename;
-            source.info.bounds = slice;
-            source.info.points = volume.width() * volume.depth() * volume.height();
-            source.info.schema.emplace_back("X", Type::Unsigned32);
-            source.info.schema.emplace_back("Y", Type::Unsigned32);
-            source.info.schema.emplace_back("Z", Type::Unsigned32);
-            source.info.schema.emplace_back("Intensity", Type::Unsigned16);
-            sources.push_back(source);
-        }
+        Source source(filename);
+        source.info.pipeline = config::getPipeline(m_json);
+        source.info.pipeline.at(0)["filename"] = filename;
+        source.info.bounds = volume;
+        source.info.points = volume.width() * volume.depth() * volume.height();
+        source.info.schema.emplace_back("X", Type::Unsigned32);
+        source.info.schema.emplace_back("Y", Type::Unsigned32);
+        source.info.schema.emplace_back("Z", Type::Unsigned32);
+        source.info.schema.emplace_back("Intensity", Type::Unsigned16);
+        sources.push_back(source);
     }
 
     for (const auto& source : sources) manifest.emplace_back(source);
