@@ -6,7 +6,7 @@ set(
     "${BASE}/entwine.cpp"
     "${BASE}/info.cpp"
     "${BASE}/merge.cpp"
-    # "${BASE}/scan.cpp"
+    "${BASE}/slice.cpp"
 )
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)

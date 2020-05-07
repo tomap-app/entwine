@@ -2521,10 +2521,10 @@ namespace
         std::string m_object;
 
     };
-    
+
     // https://cloud.google.com/storage/docs/json_api/#encoding
     const char GResource::exclusions[] = "!$&'()*+,;=:@";
-    
+
 } // unnamed namespace
 
 namespace drivers

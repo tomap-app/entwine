@@ -12,6 +12,7 @@
 #include "entwine.hpp"
 #include "info.hpp"
 #include "merge.hpp"
+#include "slice.hpp"
 
 #include <csignal>
 #include <cstdio>
@@ -44,7 +45,9 @@ namespace
             t(2) + "merge\n" +
             t(3) + "Merge colocated entwine subsets\n" +
             t(2) + "info\n" +
-            t(3) + "Gather metadata information about point cloud files\n";
+            t(3) + "Gather metadata information about point cloud files\n" +
+            t(2) + "slice\n" +
+            t(3) + "Build from slices of a zarr archive\n";
     }
 
     std::mutex mutex;
@@ -412,11 +415,15 @@ int main(int argc, char** argv)
         {
             entwine::app::Info().go(args);
         }
+        else if (app == "slice")
+        {
+            entwine::app::Slice().go(args);
+        }
         else
         {
             if (app != "help" && app != "-h" && app != "--help")
             {
-                std::cout << "Invalid app type\n";
+                std::cout << "Invalid app type: " << app << std::endl;
             }
 
             std::cout << getUsageString() << std::endl;

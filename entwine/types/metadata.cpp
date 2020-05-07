@@ -64,6 +64,9 @@ void to_json(json& j, const Metadata& m)
     };
 
     if (m.srs) j.update({ { "srs", *m.srs } });
+    // TODO: Remove this.
+    else j.update({ { "srs", json::object() } });
+
     if (m.subset) j.update({ { "subset", *m.subset } });
 }
 

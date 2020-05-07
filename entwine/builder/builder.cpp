@@ -14,6 +14,7 @@
 #include <cassert>
 
 #include <pdal/PipelineManager.hpp>
+#include <pdal/util/Utils.hpp>
 
 #include <entwine/builder/clipper.hpp>
 #include <entwine/builder/heuristics.hpp>
@@ -88,8 +89,12 @@ void Builder::runInserts(
         const auto& info = item.source.info;
         if (!item.inserted && info.points && active.overlaps(info.bounds))
         {
-            std::cout << "Adding " << origin << " - " << item.source.path <<
-                std::endl;
+            std::cout << "Adding " << origin << " - " << item.source.path;
+            if (info.pipeline.at(0).value("type", "") == "readers.slicer")
+            {
+                std::cout << " - " << info.bounds << std::endl;
+            }
+            std::cout << std::endl;
 
             pool.add([this, &cache, origin, &counter]()
             {
@@ -245,7 +250,33 @@ void Builder::insert(
     json pipeline = info.pipeline.is_null()
         ? json::array({ json::object() })
         : info.pipeline;
-    pipeline.at(0)["filename"] = localPath;
+
+    if (pipeline.at(0).value("type", "") == "readers.slicer")
+    {
+        auto& reader = pipeline.at(0);
+        const auto script = reader.at("script").get<std::string>();
+        const auto filename = reader.at("filename").get<std::string>();
+
+        const auto fargs =
+            filename + "," +
+            std::to_string(static_cast<uint64_t>(info.bounds[0])) + "," +
+            std::to_string(static_cast<uint64_t>(info.bounds[1])) + "," +
+            std::to_string(static_cast<uint64_t>(info.bounds[2])) + "," +
+            std::to_string(static_cast<uint64_t>(info.bounds[3])) + "," +
+            std::to_string(static_cast<uint64_t>(info.bounds[4])) + "," +
+            std::to_string(static_cast<uint64_t>(info.bounds[5]));
+
+        reader = {
+            { "type", "readers.numpy" },
+            { "function", "slice" },
+            { "filename", script },
+            { "fargs", fargs }
+        };
+    }
+    else
+    {
+        pipeline.at(0)["filename"] = localPath;
+    }
 
     // TODO: Allow this to be disabled via config.
     const bool needsStats = !hasStats(info.schema);
