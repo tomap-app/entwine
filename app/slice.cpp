@@ -261,6 +261,7 @@ void Slice::run()
         {
             Source source(filename);
             source.info.pipeline = config::getPipeline(m_json);
+            source.info.pipeline.at(0)["filename"] = filename;
             source.info.bounds = slice;
             source.info.points = volume.width() * volume.depth() * volume.height();
             source.info.schema.emplace_back("X", Type::Unsigned32);
