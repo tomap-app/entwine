@@ -45,6 +45,12 @@ void Slice::addArgs()
     addReprojection();
 
     m_ap.add(
+            "--order",
+            "XYZ ordering.\n"
+            "Example: --order Z X Y",
+            [this](json j) { m_json["order"] = j; });
+
+    m_ap.add(
             "--threads",
             "-t",
             "The number of threads.\n"
@@ -220,6 +226,10 @@ void Slice::run()
         Source source(filename);
         source.info.pipeline = config::getPipeline(m_json);
         source.info.pipeline.at(0)["filename"] = filename;
+        if (m_json.count("order"))
+        {
+            source.info.pipeline.at(0)["order"] = m_json.at("order");
+        }
         source.info.bounds = volume;
         source.info.points = volume.width() * volume.depth() * volume.height();
         source.info.schema.emplace_back("X", Type::Unsigned32);

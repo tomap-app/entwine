@@ -274,6 +274,26 @@ void Builder::insert(
         }
         bounds.shrink(info.bounds);
 
+        std::vector<std::string> order { "X", "Y", "Z" };
+        if (reader.count("order"))
+        {
+            order.at(0) = reader.at("order").at(0).get<std::string>();
+            order.at(1) = reader.at("order").at(1).get<std::string>();
+            order.at(2) = reader.at("order").at(2).get<std::string>();
+        }
+        if (order.size() != 3) throw std::runtime_error("Invalid order");
+
+        const auto xit = std::find(order.begin(), order.end(), "X");
+        const auto yit = std::find(order.begin(), order.end(), "Y");
+        const auto zit = std::find(order.begin(), order.end(), "Z");
+        if (xit == order.end() || yit == order.end() || zit == order.end())
+        {
+            throw std::runtime_error("Missing value in order");
+        }
+        const uint64_t xpos = std::distance(order.begin(), xit);
+        const uint64_t ypos = std::distance(order.begin(), yit);
+        const uint64_t zpos = std::distance(order.begin(), zit);
+
         const auto fargs =
             filename + "," +
             std::to_string(static_cast<uint64_t>(bounds[0])) + "," +
@@ -281,7 +301,10 @@ void Builder::insert(
             std::to_string(static_cast<uint64_t>(bounds[2])) + "," +
             std::to_string(static_cast<uint64_t>(bounds[3])) + "," +
             std::to_string(static_cast<uint64_t>(bounds[4])) + "," +
-            std::to_string(static_cast<uint64_t>(bounds[5]));
+            std::to_string(static_cast<uint64_t>(bounds[5])) + "," +
+            std::to_string(xpos) + "," +
+            std::to_string(ypos) + "," +
+            std::to_string(zpos);
 
         reader = {
             { "type", "readers.numpy" },
