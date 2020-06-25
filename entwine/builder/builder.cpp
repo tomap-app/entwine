@@ -182,6 +182,36 @@ void Builder::tryInsert(
     item.inserted = true;
 }
 
+namespace
+{
+
+std::array<uint64_t, 3> extractOrder(const json& pipeline)
+{
+    std::vector<std::string> order { "X", "Y", "Z" };
+    const auto& reader = pipeline.at(0);
+    if (reader.count("order"))
+    {
+        order.at(0) = reader.at("order").at(0).get<std::string>();
+        order.at(1) = reader.at("order").at(1).get<std::string>();
+        order.at(2) = reader.at("order").at(2).get<std::string>();
+    }
+
+    const auto xit = std::find(order.begin(), order.end(), "X");
+    const auto yit = std::find(order.begin(), order.end(), "Y");
+    const auto zit = std::find(order.begin(), order.end(), "Z");
+    if (xit == order.end() || yit == order.end() || zit == order.end())
+    {
+        throw std::runtime_error("Missing value in order");
+    }
+    const uint64_t xpos = std::distance(order.begin(), xit);
+    const uint64_t ypos = std::distance(order.begin(), yit);
+    const uint64_t zpos = std::distance(order.begin(), zit);
+
+    const std::array<uint64_t, 3> r = {{ xpos, ypos, zpos }};
+    return r;
+}
+}
+
 void Builder::insert(
     ChunkCache& cache,
     const Origin originId,
@@ -205,6 +235,9 @@ void Builder::insert(
     uint64_t inserted(0);
     uint64_t pointId(0);
 
+    const auto order = extractOrder(info.pipeline);
+    const int32_t threshold = info.pipeline.at(0).value("threshold", 0);
+
     auto layout = toLayout(metadata.absoluteSchema);
     VectorPointTable table(layout);
     table.setProcess([&]()
@@ -224,9 +257,30 @@ void Builder::insert(
         for (auto it = table.begin(); it != table.end(); ++it)
         {
             auto& pr = it.pointRef();
+
+            if (pr.getFieldAs<uint32_t>(DimId::Intensity) < threshold) continue;
+
             pr.setField(DimId::OriginId, originId);
             pr.setField(DimId::PointId, pointId);
             ++pointId;
+
+            {
+                const std::array<double, 3> a = {{
+                    pr.getFieldAs<double>(DimId::X),
+                    pr.getFieldAs<double>(DimId::Y),
+                    pr.getFieldAs<double>(DimId::Z)
+                }};
+
+                const std::array<double, 3> b = {{
+                    a[order[0]],
+                    a[order[1]],
+                    a[order[2]]
+                }};
+
+                pr.setField(DimId::X, b[0]);
+                pr.setField(DimId::Y, b[1]);
+                pr.setField(DimId::Z, b[2]);
+            }
 
             if (boundsSubset)
             {
@@ -266,6 +320,7 @@ void Builder::insert(
         auto& reader = pipeline.at(0);
         const auto script = reader.at("script").get<std::string>();
         const auto filename = reader.at("filename").get<std::string>();
+        const uint16_t threshold = reader.value("threshold", 0);
 
         Bounds bounds = metadata.boundsConforming;
         if (metadata.subset)
@@ -304,7 +359,8 @@ void Builder::insert(
             std::to_string(static_cast<uint64_t>(bounds[5])) + "," +
             std::to_string(xpos) + "," +
             std::to_string(ypos) + "," +
-            std::to_string(zpos);
+            std::to_string(zpos) + "," +
+            std::to_string(threshold);
 
         reader = {
             { "type", "readers.numpy" },
@@ -483,6 +539,7 @@ void merge(Builder& dst, const Builder& src, ChunkCache& cache)
     {
         const Dxyz& key = node.first;
         const uint64_t count = node.second;
+        if (!count) continue;
 
         if (key.d >= sharedDepth)
         {

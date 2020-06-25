@@ -49,6 +49,11 @@ void Slice::addArgs()
             "XYZ ordering.\n"
             "Example: --order Z X Y",
             [this](json j) { m_json["order"] = j; });
+    m_ap.add(
+            "--threshold",
+            "Intensity threshold.\n",
+            "Example: --threshold 200",
+            [this](json j) { m_json["threshold"] = extract(j); });
 
     m_ap.add(
             "--threads",
@@ -226,6 +231,10 @@ void Slice::run()
         Source source(filename);
         source.info.pipeline = config::getPipeline(m_json);
         source.info.pipeline.at(0)["filename"] = filename;
+        if (m_json.count("threshold"))
+        {
+            source.info.pipeline.at(0)["threshold"] = m_json.at("threshold");
+        }
         if (m_json.count("order"))
         {
             source.info.pipeline.at(0)["order"] = m_json.at("order");
