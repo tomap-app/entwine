@@ -151,7 +151,7 @@ void Builder::monitor(
             std::round(progress * 100) << "% - " <<
             commify(inserted) << " - " <<
             commify(pace) << " " <<
-            "(" << commify(intervalPace) << ") M/h" <<
+            "(" << commify(intervalPace) << ") M/h - " <<
             info.written << "W - " <<
             info.read << "R - " <<
             info.alive << "A" <<
