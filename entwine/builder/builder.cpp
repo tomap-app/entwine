@@ -145,11 +145,16 @@ void Builder::monitor(
 
         lastInserted = inserted;
 
+        const ChunkCache::Info info(ChunkCache::latchInfo());
+
         std::cout << formatTime(tick) << " - " <<
             std::round(progress * 100) << "% - " <<
             commify(inserted) << " - " <<
             commify(pace) << " " <<
             "(" << commify(intervalPace) << ") M/h" <<
+            info.written << "W - " <<
+            info.read << "R - " <<
+            info.alive << "A" <<
             std::endl;
     }
 }
@@ -248,7 +253,7 @@ void Builder::insert(
     pipeline.at(0)["filename"] = localPath;
 
     // TODO: Allow this to be disabled via config.
-    const bool needsStats = !hasStats(info.schema);
+    const bool needsStats = false; // !hasStats(info.schema);
     if (needsStats)
     {
         json& statsFilter = findOrAppendStage(pipeline, "filters.stats");
