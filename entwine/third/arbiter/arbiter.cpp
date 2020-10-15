@@ -2391,7 +2391,7 @@ S3::Resource::Resource(std::string base, std::string fullPath)
 
     // Dots in bucket name limitation with virtual-hosting over HTTPS:
     // https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html#VirtualHostingLimitations
-    m_virtualHosted = m_bucket.find_first_of('.') == std::string::npos;
+    // m_virtualHosted = m_bucket.find_first_of('.') == std::string::npos;
 }
 
 std::string S3::Resource::baseUrl() const
@@ -2408,11 +2408,11 @@ std::string S3::Resource::url() const
 {
     if (m_virtualHosted)
     {
-        return "https://" + m_bucket + "." + m_baseUrl + m_object;
+        return "http://" + m_bucket + "." + m_baseUrl + m_object;
     }
     else
     {
-        return "https://" + m_baseUrl + m_bucket + "/" + m_object;
+        return "http://" + m_baseUrl + m_bucket + "/" + m_object;
     }
 }
 
