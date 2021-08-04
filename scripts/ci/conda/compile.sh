@@ -4,15 +4,15 @@ mkdir packages
 
 
 CI_SUPPORT=""
-if [ "$PLATFORM" == "windows-latest" ]; then
+if [ "$BUILD_PLATFORM" == "windows-latest" ]; then
     CI_SUPPORT="win_64_.yaml"
 fi
 
-if [ "$PLATFORM" == "ubuntu-latest" ]; then
+if [ "$BUILD_PLATFORM" == "ubuntu-latest" ]; then
     CI_SUPPORT="linux_64_.yaml"
 fi
 
-if [ "$PLATFORM" == "macos-latest" ]; then
+if [ "$BUILD_PLATFORM" == "macos-latest" ]; then
     CI_SUPPORT="osx_64_.yaml"
 fi
 
