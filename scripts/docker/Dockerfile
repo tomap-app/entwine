@@ -1,12 +1,12 @@
 FROM connormanning/entwine:dependencies
 MAINTAINER Connor Manning <connor@hobu.co>
 
-ARG branch=master
+ARG branch=2.1.0-verbose
 RUN echo Branch: $branch
-ADD https://api.github.com/repos/connormanning/entwine/commits?sha=$branch \
+ADD https://api.github.com/repos/tomap-app/entwine/commits?sha=$branch \
     /tmp/bust-cache
 
-RUN git clone https://github.com/connormanning/entwine.git /var/entwine && \
+RUN git clone https://github.com/tomap-app/entwine.git /var/entwine && \
     cd /var/entwine && \
     git checkout $branch && \
     mkdir build && \
