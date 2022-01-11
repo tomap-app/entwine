@@ -35,3 +35,8 @@ For detailed information about how to configure your builds, check out the [conf
 
 To learn about the Entwine Point Tile file format produced by Entwine, see the [file format documentation](https://entwine.io/entwine-point-tile.html).
 
+## tomap
+
+```
+$ docker build -f ./scripts/docker/Dockerfile -t tomap-app/entwine:2.1.0-verbose .
+```

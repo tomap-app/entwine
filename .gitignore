@@ -12,3 +12,5 @@ test/data/*
 *.vcxproj
 *.vcxproj.filters
 *.sln
+
+.vscode/

@@ -77,16 +77,27 @@ ColorType Tileset::getColorType(const json& config) const
     return ColorType::None;
 }
 
+// TODO: 暫定対応 ヒエラルキーで外部ファイルが発生したらおかしくなるはずの処理
+int file_processes(0);
+int file_processes_max(0);
+
 Tileset::HierarchyTree Tileset::getHierarchyTree(const ChunkKey& root) const
 {
     HierarchyTree h;
     const std::string file("ept-hierarchy/" + root.get().toString() + ".json");
     const auto fetched(json::parse(m_in.get(file)));
 
+    if (!root.depth()) {
+        file_processes = 0;
+        file_processes_max = 0;
+    }
+
     for (const auto& p : fetched.items())
     {
         h[Dxyz(p.key())] = p.value().get<int64_t>();
+        if (!root.depth()) file_processes_max++;
     }
+    std::cout << root.get().toString() + " max:" + std::to_string(file_processes_max) << std::endl;
 
     return h;
 }
@@ -132,6 +143,9 @@ json Tileset::build(
         // Write the pointer node to that external tileset.
         return Tile(*this, ck, true);
     }
+
+    file_processes++;
+    std::cout << std::to_string(file_processes) + "/" + std::to_string(file_processes_max) + ": " + ck.get().toString() + ".pnts" << std::endl;
 
     m_threadPool.add([this, ck]()
     {
